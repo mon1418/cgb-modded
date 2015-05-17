@@ -90,6 +90,7 @@ Global $iDeleteAllPushes
 Global $iImageLoot
 Global $LastLoot
 Global $iPBVillageName
+Global $PBRemoteControlInterval
 
 Global $cmbTroopComp ;For Event change on ComboBox Troop Compositions
 Global $iCollectCounter = 0 ; Collect counter, when reaches $COLLECTATCOUNT, it will collect

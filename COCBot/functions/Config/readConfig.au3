@@ -319,6 +319,7 @@ Func readConfig() ;Reads config and sets it to the variables
 	    $pLabUpgrade = IniRead($config, "pushbullet", "AlertPBLab", "0")
 	    $pTakeAbreak = IniRead($config, "pushbullet", "AlertPBVBreak", "0")
 	    $pAnotherDevice = IniRead($config, "pushbullet", "AlertPBOtherDevice", "0")
+		$PBRemoteControlInterval = IniRead($config, "pushbullet", "RemoteControlInterval", "30000")
 
 	Else
 		Return False

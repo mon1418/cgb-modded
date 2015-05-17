@@ -54,6 +54,8 @@ DirCreate($dirLogs)
 DirCreate($dirLoots)
 FileChangeDir($LibDir)
 
+AdlibRegister("PushBulletRemoteControl", $PBRemoteControlInterval)
+
 While 1
 	Switch TrayGetMsg()
 		Case $tiAbout

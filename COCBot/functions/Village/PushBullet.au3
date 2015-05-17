@@ -59,30 +59,38 @@ Func _RemoteControl()
 
 				If $title[$x] = "BOT HELP" Then
 					_Push($iPBVillageName & ": Request for Help", "You can remotely control your bot using the following command format\nEnter Bot <command> in the Title message\n\n<command> is:\nPause - pause the bot\nResume - resume the bot\nStats - village report\nLogs - send the current log file\nDelete - Delete all previous Push messages\nLastRaid - send last raid screenshot\nHelp - send this help message")
-					SetLog("Your request has been received. Help has been sent")
+					SetLog("Your HELP request has been received. Help has been sent")
 					_DeleteMessage($iden[$x])
+			    ElseIf $title[$x] = "BOT START" Then
+					SetLog("Your START request has been received.")
+					_DeleteMessage($iden[$x])
+					_PBStartBot()
+			    ElseIf $title[$x] = "BOT STOP" Then
+					SetLog("Your STOP request has been received.")
+					_DeleteMessage($iden[$x])
+					_PBStopBot()
 			    ElseIf $title[$x] = "BOT PAUSE" Then
-					SetLog("Your request has been received.")
+					SetLog("Your PAUSE request has been received.")
 					_DeleteMessage($iden[$x])
-					TogglePauseImpl("Push")
+					_PBPauseBot()
 				ElseIf $title[$x] = "BOT RESUME" Then
-					SetLog("Your request has been received.")
+					SetLog("Your RESUME request has been received.")
 					_DeleteMessage($iden[$x])
-					TogglePauseImpl("Push")
+					_PBResumeBot()
 			    ElseIf $title[$x] = "BOT DELETE" Then
 					_DeletePush()
-					SetLog("Your request has been received.")
+					SetLog("Your DELETE request has been received.")
 					_Push($iPBVillageName & ": Request to Delete Push messages...", "All your previous Push messages are deleted...")
 				ElseIf $title[$x] = "BOT STATS" Then
-					SetLog("Your request has been received. Statistics sent")
+					SetLog("Your STATS request has been received. Statistics sent")
 					_Push($iPBVillageName & ": Village Report, My Lord...", "Here are your Resources at Start\n-[G]: " & _NumberFormat($GoldStart) & "\n-[E]: " & _NumberFormat($ElixirStart) & "\n-[D]: " & _NumberFormat($DarkStart) & " \n-[T]: " & $TrophyStart & "\n\nNow (Current Resources)\n-[G]: " & _NumberFormat($GoldVillage) & "\n-[E]: " & _NumberFormat($ElixirVillage) & "\n-[D]: " & _NumberFormat($DarkVillage) & "\n-[T]: " & $TrophyVillage & "\n\n-[GEM]: " & $GemCount & "\n [No. of Free Builders]: " & $FreeBuilder & "\n [No. of Wall Up]: G: " & $wallgoldmake & "/ E: " & $wallelixirmake & "\n\nAttacked: " & GUICtrlRead($lblresultvillagesattacked) & "\nSkipped: " & GUICtrlRead($lblresultvillagesskipped))
 					_DeleteMessage($iden[$x])
 				ElseIf $title[$x] = "BOT LOGS" Then
-					SetLog("Your request has been received. Log is now sent")
+					SetLog("Your LOGS request has been received. Log is now sent")
 					_PushFile($sLogFName, "logs", "text/plain; charset=utf-8", $iPBVillageName & ": Current Logs", $sLogFName)
 					_DeleteMessage($iden[$x])
-				 ElseIf $title[$x] = "BOT LASTRAID" Then
-					SetLog("Your request has been received.")
+				ElseIf $title[$x] = "BOT LASTRAID" Then
+					SetLog("Your LASTRAID request has been received.")
 					If $iImageLoot <> "" Then
 					   _PushFile($iImageLoot, "Loots", "image/jpeg", $iPBVillageName & ": Last Raid", $iImageLoot)
 				    Else
@@ -144,7 +152,7 @@ Func _PushFile($File, $Folder, $FileType, $title, $body)
 	Local $policy = _StringBetween($Result, 'policy":"', '"')
 	Local $file_url = _StringBetween($Result, 'file_url":"', '"')
 
-    $Result = RunWait(@ScriptDir & "\curl\curl.exe -i -X POST " & $upload_url[0] & ' -F awsaccesskeyid="' & $awsaccesskeyid[0] & '" -F acl="' & $acl[0] & '" -F key="' & $key[0] & '" -F signature="' & $signature[0] & '" -F policy="' & $policy[0] & '" -F content-type="' & $FileType & '" -F ""file=@"' & @ScriptDir & '\' & $Folder & '\' & $File & """", "", @SW_HIDE)
+    $Result = RunWait(@ScriptDir & "\curl\curl.exe -i -X POST " & $upload_url[0] & ' -F awsaccesskeyid="' & $awsaccesskeyid[0] & '" -F acl="' & $acl[0] & '" -F key="' & $key[0] & '" -F signature="' & $signature[0] & '" -F policy="' & $policy[0] & '" -F content-type="' & $FileType & '" -F file=@"' & @ScriptDir & '\' & $Folder & '\' & $File & '" -o "' & @ScriptDir & '\logs\curl.log"', "", @SW_HIDE)
 
 	  $oHTTP.Open("Post", "https://api.pushbullet.com/v2/pushes", False)
 	  $oHTTP.SetCredentials($access_token, "", 0)
@@ -216,3 +224,47 @@ Func _DeleteMessage($iden)
 	$oHTTP.SetRequestHeader("Content-Type", "application/json")
 	$oHTTP.Send()
 EndFunc   ;==>_DeleteMessage
+
+Func _PBStartBot()
+	$state = WinGetState(GUICtrlGetHandle($btnStart), "")
+	If BitAnd($state,2) Then
+		$command = @ScriptDir & "\tools\controlclick.exe ""[REGEXPTITLE:(?i).*?Clash Game Bot.*?]"" ""[CLASS:Button; TEXT:Start Bot]"""
+		Run($command, "", @SW_HIDE)
+		;ControlClick('[REGEXPTITLE:(?i).*?Clash Game Bot.*?]', "Start Bot", "[CLASS:Button; TEXT:Start Bot]", "left", "1")
+		If $pEnabled = 1 AND $pRemote = 1 Then _Push($iPBVillageName & ": Request to Start...", "Your request has been received. Bot is now started.")
+	Else
+		If $pEnabled = 1 AND $pRemote = 1 Then _Push($iPBVillageName & ": Request to Start Failed...", "Your request has been received. Bot was already running...")
+	EndIf
+EndFunc   ;==>_PBStartBot
+
+Func _PBStopBot()
+	$state = WinGetState(GUICtrlGetHandle($btnStop), "")
+	If BitAnd($state,2) Then
+		ControlClick('[REGEXPTITLE:(?i).*?Clash Game Bot.*?]', "Stop Bot", "[CLASS:Button; TEXT:Stop Bot]", "left", "1")
+		If $pEnabled = 1 AND $pRemote = 1 Then _Push($iPBVillageName & ": Request to Stop...", "Your request has been received. Bot is now stopped.")
+	Else
+		If $pEnabled = 1 AND $pRemote = 1 Then _Push($iPBVillageName & ": Request to Stop Failed...", "Your request has been received. Bot was already stopped...")
+	EndIf
+EndFunc   ;==>_PBStopBot
+
+Func _PBPauseBot()
+	$state = WinGetState(GUICtrlGetHandle($btnPause), "")
+	If BitAnd($state,2) AND $Runstate Then
+		$command = @ScriptDir & "\tools\controlclick.exe ""[REGEXPTITLE:(?i).*?Clash Game Bot.*?]"" ""[CLASS:Button; TEXT:Pause]"""
+		Run($command, "", @SW_HIDE)
+		;ControlClick('[REGEXPTITLE:(?i).*?Clash Game Bot.*?]', "Pause", "[CLASS:Button; TEXT:Pause]", "left", "1")
+		If $pEnabled = 1 AND $pRemote = 1 Then _Push($iPBVillageName & ": Request to Pause...", "Your request has been received. Bot is now paused.")
+	Else
+		If $pEnabled = 1 AND $pRemote = 1 Then _Push($iPBVillageName & ": Request to Pause Failed...", "Your request has been received. Bot was already paused...")
+	EndIf
+EndFunc   ;==>_PBPauseBot
+
+Func _PBResumeBot()
+	$state = WinGetState(GUICtrlGetHandle($btnResume), "")
+	If BitAnd($state,2) Then
+		ControlClick('[REGEXPTITLE:(?i).*?Clash Game Bot.*?]', "Resume", "[CLASS:Button; TEXT:Resume]", "left", "1")
+		If $pEnabled = 1 AND $pRemote = 1 Then _Push($iPBVillageName & ": Request to Resume...", "Your request has been received. Bot is now resumed.")
+	Else
+		If $pEnabled = 1 AND $pRemote = 1 Then _Push($iPBVillageName & ": Request to Resume Failed...", "Your request has been received. Bot was already running...")
+	EndIf
+EndFunc   ;==>_PBResumeBot
